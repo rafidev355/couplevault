@@ -1,0 +1,1754 @@
+<!DOCTYPE html>
+<html lang="id" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CoupleLink & Vault — Cek Lokasi, Komunikasi & Games Pasangan</title>
+  <!-- Load Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Load Inter Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            vault: {
+              bg: '#070b12',
+              card: '#0e1624',
+              card2: '#131f33',
+              border: 'rgba(56, 189, 248, 0.16)',
+              neon: '#22d3ee',
+              rose: '#fb7185',
+              emerald: '#34d399',
+              amber: '#fbbf24',
+            }
+          },
+          boxShadow: {
+            'neon-cyan': '0 0 24px rgba(34, 211, 238, 0.22)',
+            'neon-rose': '0 0 24px rgba(251, 113, 133, 0.22)',
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    /* Sleek dark glassmorphism + subtle matrix/cyber-couple grid aesthetic */
+    body {
+      background-color: #070b12;
+      color: #f1f5f9;
+      font-family: 'Inter', sans-serif;
+      overflow-x: hidden;
+    }
+
+    .matrix-backdrop {
+      background-image:
+        radial-gradient(circle at 18% 12%, rgba(34, 211, 238, 0.12), transparent 36%),
+        radial-gradient(circle at 85% 20%, rgba(251, 113, 133, 0.12), transparent 38%),
+        linear-gradient(to right, rgba(34, 211, 238, 0.035) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(34, 211, 238, 0.035) 1px, transparent 1px);
+      background-size: 100% 100%, 100% 100%, 24px 24px, 24px 24px;
+    }
+
+    .glass-panel {
+      background: rgba(14, 22, 36, 0.84);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid rgba(148, 163, 184, 0.14);
+    }
+
+    .glass-sub {
+      background: rgba(19, 31, 51, 0.72);
+      border: 1px solid rgba(148, 163, 184, 0.12);
+    }
+
+    /* Custom scrollbar for mobile feel */
+    ::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(15, 23, 42, 0.4);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(56, 189, 248, 0.35);
+      border-radius: 9999px;
+    }
+
+    @keyframes pulseRing {
+      0% { transform: scale(0.85); opacity: 0.9; }
+      70% { transform: scale(1.55); opacity: 0; }
+      100% { transform: scale(1.55); opacity: 0; }
+    }
+
+    .radar-pulse {
+      animation: pulseRing 2.2s infinite;
+    }
+
+    canvas.interactive-surface {
+      touch-action: none;
+      display: block;
+    }
+  </style>
+</head>
+<body class="matrix-backdrop min-h-screen flex flex-col items-center justify-start py-2 px-2 sm:py-5 sm:px-4">
+
+  <!-- Mobile-First App Shell (HP-sized container centered on desktop) -->
+  <div id="appShell" class="w-full max-w-[440px] min-h-[94vh] glass-panel rounded-[32px] shadow-2xl flex flex-col justify-between overflow-hidden relative border border-cyan-500/20">
+
+    <!-- Top Status & Brand Header -->
+    <header class="px-4 pt-4 pb-3 border-b border-slate-800/90 bg-slate-950/60 sticky top-0 z-30">
+      <div class="flex items-center justify-between gap-2">
+        <div class="flex items-center gap-2.5 min-w-0">
+          <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-cyan-400/25 via-sky-500/20 to-rose-400/25 border border-cyan-400/40 flex items-center justify-center shrink-0 shadow-neon-cyan">
+            <span class="text-lg">💞</span>
+          </div>
+          <div class="min-w-0">
+            <div class="flex items-center gap-1.5">
+              <h1 class="font-bold text-sm sm:text-base tracking-tight text-white truncate">CoupleLink & Vault</h1>
+              <span class="px-1.5 py-0.5 text-[10px] font-mono rounded-md bg-cyan-500/15 text-cyan-300 border border-cyan-400/30">v2.4</span>
+            </div>
+            <p id="coupleHeaderSubtitle" class="text-[11px] text-slate-400 truncate">
+              Pasangan: <span class="text-rose-300 font-medium">Raka & Naya</span>
+            </p>
+          </div>
+        </div>
+
+        <!-- Status Badge & Quick Switcher -->
+        <div class="flex items-center gap-1.5 shrink-0">
+          <span id="headerStatusBadge" class="px-2.5 py-1 rounded-full text-[11px] font-semibold border transition-all">
+            Menunggu ACC
+          </span>
+          <button
+            id="btnOpenCoupleSetup"
+            title="Atur Pasangan & Undangan"
+            class="p-2 rounded-xl glass-sub hover:border-cyan-400/50 text-slate-200 transition active:scale-95"
+          >
+            ⚙️
+          </button>
+        </div>
+      </div>
+
+      <!-- 7-Day Expiry Countdown Strip -->
+      <div id="expiryBanner" class="mt-2.5 px-3 py-1.5 rounded-xl bg-slate-900/90 border border-slate-800 flex items-center justify-between text-[11px]">
+        <div class="flex items-center gap-1.5 text-slate-300 truncate">
+          <span id="expiryDot" class="w-2 h-2 rounded-full bg-amber-400 inline-block shrink-0"></span>
+          <span id="expiryText" class="truncate">Masa aktif undangan: <strong class="text-cyan-300">7h 00j</strong> tersisa</span>
+        </div>
+        <button id="btnSimulate7Days" class="text-[10px] font-mono px-2 py-0.5 rounded-lg bg-amber-500/15 text-amber-300 border border-amber-400/30 hover:bg-amber-500/25 transition shrink-0 ml-2">
+          Simulasi +7 Hari
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Scrollable Content Area -->
+    <main id="mainContent" class="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+
+      <!-- ========================================================= -->
+      <!-- TAB 1: UNDANGAN & ACC WA DEVELOPER (INVITE & APPROVAL)      -->
+      <!-- ========================================================= -->
+      <section id="tab-invite" class="tab-panel space-y-4">
+        <!-- Auto Deactivated Warning Card (Shown when expired) -->
+        <div id="expiredNoticeCard" class="hidden p-4 rounded-2xl bg-rose-950/50 border border-rose-500/40 space-y-2.5 shadow-neon-rose">
+          <div class="flex items-start gap-2.5">
+            <span class="text-xl leading-none">🔒</span>
+            <div>
+              <h2 class="font-bold text-sm text-rose-200">Undangan Otomatis Nonaktif (7 Hari)</h2>
+              <p class="text-xs text-rose-200/80 mt-1 leading-relaxed">
+                Undangan otomatis nonaktif setelah 7 hari digunakan demi keamanan & privasi. Fitur lokasi, chat, call, dan games terkunci hingga undangan baru diperpanjang & di-ACC.
+              </p>
+            </div>
+          </div>
+          <button id="btnRenewInvite" class="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-rose-500 to-amber-500 text-slate-950 font-bold text-xs shadow-lg hover:opacity-95 transition active:scale-[0.99]">
+            🔄 Buat Undangan Baru & Ajukan ACC WA (6283162041701)
+          </button>
+        </div>
+
+        <!-- Couple Profile & Invite Generator Card -->
+        <div class="p-4 rounded-2xl glass-panel space-y-3.5">
+          <div class="flex items-center justify-between">
+            <h2 class="text-sm font-bold text-white flex items-center gap-1.5">
+              <span>🔗</span> Link & Kode Undangan Pasangan
+            </h2>
+            <span id="inviteApprovalPill" class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-500/15 text-amber-300 border border-amber-400/30">
+              Menunggu ACC Developer
+            </span>
+          </div>
+
+          <!-- Editable User & Partner Names -->
+          <div class="grid grid-cols-2 gap-2.5">
+            <div>
+              <label class="block text-[11px] text-slate-400 mb-1">Nama Kamu</label>
+              <input id="inputUserName" type="text" value="Raka" class="w-full px-3 py-2 rounded-xl bg-slate-950/80 border border-slate-700/80 text-xs text-white focus:outline-none focus:border-cyan-400" />
+            </div>
+            <div>
+              <label class="block text-[11px] text-slate-400 mb-1">Nama Pasangan</label>
+              <input id="inputPartnerName" type="text" value="Naya" class="w-full px-3 py-2 rounded-xl bg-slate-950/80 border border-slate-700/80 text-xs text-white focus:outline-none focus:border-rose-400" />
+            </div>
+          </div>
+
+          <!-- Generated Link & Code Box -->
+          <div class="p-3 rounded-xl bg-slate-950/90 border border-cyan-500/25 space-y-2">
+            <div class="flex items-center justify-between text-[11px]">
+              <span class="text-slate-400">Kode Undangan:</span>
+              <span id="displayInviteCode" class="font-mono font-bold text-cyan-300 tracking-wider">CPL-8842-NY</span>
+            </div>
+            <div class="flex items-center justify-between gap-2 bg-slate-900/90 px-2.5 py-2 rounded-lg border border-slate-800">
+              <span id="displayInviteLink" class="font-mono text-[11px] text-slate-300 truncate">
+                https://couplelink-vault.app/join?code=CPL-8842-NY
+              </span>
+              <button id="btnCopyInvite" class="px-2.5 py-1 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-200 border border-cyan-400/30 text-[11px] font-semibold shrink-0 transition active:scale-95">
+                Salin
+              </button>
+            </div>
+          </div>
+
+          <!-- Generate New Code Button -->
+          <button id="btnGenerateNewCode" class="w-full py-2 px-3 rounded-xl glass-sub hover:border-cyan-400/40 text-xs font-semibold text-cyan-200 transition active:scale-[0.99]">
+            ✨ Generate Kode Undangan Baru
+          </button>
+        </div>
+
+        <!-- WA Developer Approval (6283162041701) Card -->
+        <div class="p-4 rounded-2xl glass-panel border border-emerald-500/25 space-y-3">
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-xl bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center text-emerald-300 text-base">
+              🛡️
+            </div>
+            <div>
+              <h3 class="text-sm font-bold text-white">Izin Akses & ACC WA Developer</h3>
+              <p class="text-[11px] text-slate-400 font-mono">WA Admin: +62 831-6204-1701</p>
+            </div>
+          </div>
+
+          <p class="text-xs text-slate-300 leading-relaxed">
+            Demi keamanan data lokasi & privasi pasangan, setiap undangan baru memerlukan <span class="text-emerald-300 font-semibold">ACC Developer</span> melalui WhatsApp <span class="font-mono text-cyan-300">6283162041701</span>.
+          </p>
+
+          <!-- Primary WA Approval Link Button -->
+          <a
+            id="waApprovalLink"
+            href="#"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-emerald-400 to-teal-400 text-slate-950 font-bold text-xs flex items-center justify-center gap-2 shadow-lg hover:brightness-105 transition active:scale-[0.99]"
+          >
+            <span>💬</span>
+            <span>Kirim Permintaan ACC ke WA 6283162041701</span>
+          </a>
+
+          <!-- Demo / Instant Tester Controls for Preview -->
+          <div class="pt-2 border-t border-slate-800/90 space-y-2">
+            <div class="flex items-center justify-between text-[11px] text-slate-400">
+              <span>Mode Uji Coba Preview (Simulasi):</span>
+              <span class="text-cyan-300 font-mono">Instant Test</span>
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <button id="btnDemoApprove" class="py-2 px-2.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-200 border border-emerald-400/35 text-[11px] font-semibold transition active:scale-95">
+                ✅ Simulasi ACC Developer
+              </button>
+              <button id="btnDemoPending" class="py-2 px-2.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-200 border border-amber-400/35 text-[11px] font-semibold transition active:scale-95">
+                ⏳ Set Menunggu ACC
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================================= -->
+      <!-- TAB 2: CEK LOKASI PASANGAN (LIVE LOCATION RADAR)           -->
+      <!-- ========================================================= -->
+      <section id="tab-location" class="tab-panel hidden space-y-4">
+        <div class="p-4 rounded-2xl glass-panel space-y-3.5">
+          <div class="flex items-center justify-between gap-2">
+            <div>
+              <h2 class="text-sm font-bold text-white flex items-center gap-1.5">
+                <span>📍</span> Radar Lokasi Pasangan
+              </h2>
+              <p id="locationLastUpdated" class="text-[11px] text-slate-400 mt-0.5">
+                Terakhir diperbarui: Baru saja
+              </p>
+            </div>
+
+            <!-- Privacy Toggle -->
+            <button id="btnTogglePrivacy" class="px-3 py-1.5 rounded-xl text-[11px] font-semibold border transition active:scale-95 bg-emerald-500/15 text-emerald-300 border-emerald-400/35">
+              👁️ Bagikan Lokasi: ON
+            </button>
+          </div>
+
+          <!-- Interactive Radar & Map Canvas -->
+          <div class="relative w-full h-56 rounded-2xl overflow-hidden border border-cyan-500/25 bg-slate-950">
+            <canvas id="locationCanvas" class="interactive-surface w-full h-full"></canvas>
+            <div class="absolute top-2.5 left-2.5 px-2.5 py-1 rounded-lg bg-slate-950/80 border border-slate-800 text-[10px] font-mono text-cyan-300">
+              GPS LIVE RADAR
+            </div>
+            <div id="distancePill" class="absolute top-2.5 right-2.5 px-2.5 py-1 rounded-lg bg-rose-500/20 border border-rose-400/40 text-[10px] font-mono font-bold text-rose-200">
+              Jarak: 1.4 km
+            </div>
+          </div>
+
+          <!-- Coordinate & Status Grid -->
+          <div class="grid grid-cols-2 gap-2.5">
+            <div class="p-3 rounded-xl glass-sub">
+              <div class="text-[10px] uppercase tracking-wider text-cyan-300 font-semibold">Lokasi Kamu</div>
+              <div id="myCoordsText" class="font-mono text-xs text-white mt-1">-6.1783, 106.6319</div>
+              <div id="myAreaText" class="text-[11px] text-slate-400 truncate mt-0.5">Tangerang, Banten</div>
+            </div>
+            <div class="p-3 rounded-xl glass-sub">
+              <div class="text-[10px] uppercase tracking-wider text-rose-300 font-semibold">Lokasi Pasangan</div>
+              <div id="partnerCoordsText" class="font-mono text-xs text-white mt-1">-6.1891, 106.6384</div>
+              <div id="partnerStatusText" class="text-[11px] text-emerald-300 truncate mt-0.5">● Aktif • Baterai 84%</div>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="grid grid-cols-2 gap-2.5">
+            <button id="btnUpdateLocation" class="py-2.5 px-3 rounded-xl bg-gradient-to-r from-cyan-400 to-sky-500 text-slate-950 font-bold text-xs shadow-neon-cyan hover:opacity-95 transition active:scale-95">
+              📡 Update Lokasi Sekarang
+            </button>
+            <button id="btnMovePartnerSim" class="py-2.5 px-3 rounded-xl glass-sub hover:border-rose-400/40 text-rose-200 font-semibold text-xs transition active:scale-95">
+              🚶 Simulasi Gerak Pasangan
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================================= -->
+      <!-- TAB 3: KOMUNIKASI (CHAT, VOICE NOTE, CALL & VIDEO CALL)   -->
+      <!-- ========================================================= -->
+      <section id="tab-chat" class="tab-panel hidden space-y-3">
+        <!-- Call & Video Call Action Bar -->
+        <div class="p-3 rounded-2xl glass-panel flex items-center justify-between gap-2">
+          <div class="flex items-center gap-2.5 min-w-0">
+            <div class="relative">
+              <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-rose-500/30 to-cyan-500/30 border border-rose-400/40 flex items-center justify-center text-base">
+                👩🏻‍💻
+              </div>
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-slate-900 absolute bottom-0 right-0"></span>
+            </div>
+            <div class="min-w-0">
+              <div id="chatPartnerNameTitle" class="text-xs font-bold text-white truncate">Naya (Pasangan)</div>
+              <div class="text-[10px] text-emerald-300">Online • Terenkripsi CoupleVault</div>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-1.5 shrink-0">
+            <button id="btnStartVoiceCall" class="px-3 py-2 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-400/35 text-cyan-200 text-xs font-semibold transition active:scale-95" title="Voice Call">
+              📞 Call
+            </button>
+            <button id="btnStartVideoCall" class="px-3 py-2 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-400/35 text-rose-200 text-xs font-semibold transition active:scale-95" title="Video Call">
+              📹 Video
+            </button>
+          </div>
+        </div>
+
+        <!-- Chat Messages List -->
+        <div class="p-3.5 rounded-2xl glass-panel space-y-3">
+          <div id="chatMessagesContainer" class="h-64 overflow-y-auto space-y-2.5 pr-1">
+            <!-- Populated via JS -->
+          </div>
+
+          <!-- Voice Note Recorder Bar -->
+          <div id="vnRecorderBox" class="p-2.5 rounded-xl bg-slate-950/90 border border-slate-800 flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2 text-xs">
+              <span id="vnIndicatorDot" class="w-2.5 h-2.5 rounded-full bg-slate-500"></span>
+              <span id="vnTimerText" class="font-mono text-slate-300">Voice Note: 00:00</span>
+            </div>
+            <button id="btnToggleVoiceNote" class="px-3 py-1.5 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 border border-rose-400/40 text-rose-200 text-[11px] font-semibold transition active:scale-95">
+              🎙️ Rekam VN
+            </button>
+          </div>
+
+          <!-- Text Message Input Form -->
+          <form id="chatInputForm" class="flex items-center gap-2">
+            <input
+              id="chatTextInput"
+              type="text"
+              placeholder="Ketik pesan romantis atau kabar kamu..."
+              class="flex-1 px-3.5 py-2.5 rounded-xl bg-slate-950/85 border border-slate-700/80 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400"
+            />
+            <button type="submit" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-cyan-400 to-emerald-400 text-slate-950 font-bold text-xs shadow-md hover:opacity-95 transition active:scale-95">
+              Kirim
+            </button>
+          </form>
+        </div>
+      </section>
+
+      <!-- ========================================================= -->
+      <!-- TAB 4: GAMES PASANGAN (DRAW MULTIPLAYER & 2 QUIZZES)      -->
+      <!-- ========================================================= -->
+      <section id="tab-games" class="tab-panel hidden space-y-4">
+        <!-- Sub-game Selector Pills -->
+        <div class="grid grid-cols-3 gap-1.5 p-1 rounded-2xl bg-slate-950/80 border border-slate-800">
+          <button data-game="draw" class="game-subtab py-2 px-2 rounded-xl text-[11px] font-bold bg-cyan-500/20 text-cyan-200 border border-cyan-400/30 transition">
+            🎨 Draw Couple
+          </button>
+          <button data-game="love" class="game-subtab py-2 px-2 rounded-xl text-[11px] font-semibold text-slate-400 hover:text-white transition">
+            💘 Seberapa Sayang?
+          </button>
+          <button data-game="honesty" class="game-subtab py-2 px-2 rounded-xl text-[11px] font-semibold text-slate-400 hover:text-white transition">
+            🕵️ Test Kejujuran
+          </button>
+        </div>
+
+        <!-- GAME 1: DRAW MULTIPLAYER BERSAMA -->
+        <div id="game-panel-draw" class="game-panel p-4 rounded-2xl glass-panel space-y-3">
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="text-sm font-bold text-white">Draw Multiplayer Bersama</h3>
+              <p class="text-[11px] text-slate-400">Gambar bareng pasangan secara real-time</p>
+            </div>
+            <button id="btnPartnerDrawStroke" class="px-2.5 py-1.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 border border-rose-400/35 text-rose-200 text-[11px] font-semibold transition active:scale-95">
+              ✨ Pasangan Menggambar
+            </button>
+          </div>
+
+          <canvas id="drawCanvas" class="interactive-surface w-full h-56 rounded-2xl bg-slate-950 border border-cyan-500/25"></canvas>
+
+          <!-- Drawing Tools -->
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div class="flex items-center gap-1.5">
+              <button data-color="#22d3ee" class="draw-color w-6 h-6 rounded-full bg-cyan-400 ring-2 ring-white"></button>
+              <button data-color="#fb7185" class="draw-color w-6 h-6 rounded-full bg-rose-400"></button>
+              <button data-color="#34d399" class="draw-color w-6 h-6 rounded-full bg-emerald-400"></button>
+              <button data-color="#fbbf24" class="draw-color w-6 h-6 rounded-full bg-amber-400"></button>
+              <button data-color="#f8fafc" class="draw-color w-6 h-6 rounded-full bg-slate-50"></button>
+            </div>
+
+            <div class="flex items-center gap-1.5">
+              <select id="drawBrushSize" class="px-2 py-1 rounded-lg bg-slate-900 border border-slate-700 text-[11px] text-slate-200">
+                <option value="3">Tipis</option>
+                <option value="6" selected>Sedang</option>
+                <option value="11">Tebal</option>
+              </select>
+              <button id="btnEraserToggle" class="px-2.5 py-1 rounded-lg glass-sub text-[11px] text-slate-200 hover:border-cyan-400/40">
+                🧽 Hapus
+              </button>
+              <button id="btnClearDrawCanvas" class="px-2.5 py-1 rounded-lg bg-rose-500/15 border border-rose-400/30 text-[11px] text-rose-200">
+                🗑️ Bersihkan
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- GAME 2: QUIZ SEBERAPA SAYANG PASANGAN KITA -->
+        <div id="game-panel-love" class="game-panel hidden p-4 rounded-2xl glass-panel space-y-3.5">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-bold text-rose-300">💘 Quiz: Seberapa Sayang Pasangan Kita?</h3>
+            <span id="loveQuizProgress" class="font-mono text-[11px] text-slate-400">1/4</span>
+          </div>
+          <div id="loveQuizBody" class="space-y-2.5">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+
+        <!-- GAME 3: QUIZ TEST KEJUJURAN PASANGAN -->
+        <div id="game-panel-honesty" class="game-panel hidden p-4 rounded-2xl glass-panel space-y-3.5">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-bold text-cyan-300">🕵️ Quiz: Test Kejujuran Pasangan</h3>
+            <span id="honestyQuizProgress" class="font-mono text-[11px] text-slate-400">1/4</span>
+          </div>
+          <div id="honestyQuizBody" class="space-y-2.5">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================================= -->
+      <!-- TAB 5: DATABASE PENGGUNA & PASANGAN (USER DATABASE)       -->
+      <!-- ========================================================= -->
+      <section id="tab-db" class="tab-panel hidden space-y-4">
+        <div class="p-4 rounded-2xl glass-panel space-y-3">
+          <div class="flex items-center justify-between gap-2">
+            <div>
+              <h2 class="text-sm font-bold text-white flex items-center gap-1.5">
+                <span>🗄️</span> Database Pengguna & Pasangan
+              </h2>
+              <p class="text-[11px] text-slate-400">Tersimpan lokal & tersinkronisasi dengan sesi aktif</p>
+            </div>
+            <span id="dbTotalCount" class="px-2.5 py-1 rounded-xl bg-cyan-500/15 border border-cyan-400/30 font-mono text-xs text-cyan-200">
+              0 Akun
+            </span>
+          </div>
+
+          <!-- Quick Add User/Couple Record Form -->
+          <form id="addDbUserForm" class="p-3 rounded-xl bg-slate-950/80 border border-slate-800 space-y-2">
+            <div class="text-[11px] font-semibold text-cyan-300">+ Tambah Data Pasangan ke Database</div>
+            <div class="grid grid-cols-2 gap-2">
+              <input id="dbUserName" type="text" placeholder="Nama User" required class="px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-xs text-white focus:outline-none focus:border-cyan-400" />
+              <input id="dbPartnerName" type="text" placeholder="Nama Pasangan" required class="px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-xs text-white focus:outline-none focus:border-rose-400" />
+            </div>
+            <div class="flex items-center gap-2">
+              <select id="dbAccStatus" class="flex-1 px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-xs text-slate-200">
+                <option value="Pending">Menunggu ACC (Pending)</option>
+                <option value="Approved">Disetujui ACC (Approved)</option>
+                <option value="Expired">Kadaluarsa 7 Hari (Expired)</option>
+              </select>
+              <button type="submit" class="px-3 py-1.5 rounded-lg bg-cyan-400 text-slate-950 font-bold text-xs hover:opacity-95 transition">
+                Simpan
+              </button>
+            </div>
+          </form>
+
+          <!-- Export & Reset DB Buttons -->
+          <div class="flex items-center gap-2">
+            <button id="btnExportDbJson" class="flex-1 py-2 px-3 rounded-xl glass-sub hover:border-emerald-400/40 text-emerald-200 text-xs font-semibold transition">
+              📥 Export JSON
+            </button>
+            <button id="btnResetDbDefault" class="py-2 px-3 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-400/30 text-rose-200 text-xs font-semibold transition">
+              Reset Seed
+            </button>
+          </div>
+
+          <!-- Database Records List -->
+          <div id="dbRecordsContainer" class="space-y-2.5 max-h-72 overflow-y-auto pr-0.5">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Bottom Mobile Navigation Bar -->
+    <nav class="grid grid-cols-5 gap-1 px-2 py-2 bg-slate-950/90 border-t border-slate-800/90 sticky bottom-0 z-30">
+      <button data-tab="invite" class="nav-tab flex flex-col items-center justify-center py-1.5 rounded-xl text-[10px] font-semibold bg-cyan-500/15 text-cyan-300 border border-cyan-400/30 transition">
+        <span class="text-sm">🔗</span>
+        <span class="mt-0.5">Undangan</span>
+      </button>
+      <button data-tab="location" class="nav-tab flex flex-col items-center justify-center py-1.5 rounded-xl text-[10px] font-medium text-slate-400 hover:text-white transition">
+        <span class="text-sm">📍</span>
+        <span class="mt-0.5">Lokasi</span>
+      </button>
+      <button data-tab="chat" class="nav-tab flex flex-col items-center justify-center py-1.5 rounded-xl text-[10px] font-medium text-slate-400 hover:text-white transition">
+        <span class="text-sm">💬</span>
+        <span class="mt-0.5">Chat/Call</span>
+      </button>
+      <button data-tab="games" class="nav-tab flex flex-col items-center justify-center py-1.5 rounded-xl text-[10px] font-medium text-slate-400 hover:text-white transition">
+        <span class="text-sm">🎮</span>
+        <span class="mt-0.5">Games</span>
+      </button>
+      <button data-tab="db" class="nav-tab flex flex-col items-center justify-center py-1.5 rounded-xl text-[10px] font-medium text-slate-400 hover:text-white transition">
+        <span class="text-sm">🗄️</span>
+        <span class="mt-0.5">Database</span>
+      </button>
+    </nav>
+
+    <!-- =========================================================== -->
+    <!-- CALL / VIDEO CALL OVERLAY MODAL                             -->
+    <!-- =========================================================== -->
+    <div id="callModal" class="hidden fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4">
+      <div class="w-full max-w-[380px] rounded-3xl glass-panel border border-cyan-400/30 p-5 text-center space-y-4 shadow-2xl">
+        <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-cyan-500/15 border border-cyan-400/30 text-[11px] font-mono text-cyan-300">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+          <span id="callTypeLabel">VOICE CALL AKTIF</span>
+        </div>
+
+        <!-- Video Preview Box (Visible when video call) -->
+        <div id="videoCallViewport" class="hidden relative w-full h-44 rounded-2xl bg-gradient-to-br from-slate-900 via-indigo-950/60 to-rose-950/50 border border-slate-700/80 flex flex-col items-center justify-center overflow-hidden">
+          <div class="text-4xl mb-1">📹💞</div>
+          <div id="videoStreamStatus" class="text-xs font-mono text-cyan-200">Kamera HD Pasangan Tersambung</div>
+          <div class="absolute bottom-2 right-2 px-2 py-0.5 rounded bg-slate-950/80 text-[10px] font-mono text-slate-300">
+            YOU (PIP)
+          </div>
+        </div>
+
+        <!-- Avatar for Voice Call -->
+        <div id="voiceCallAvatar" class="flex flex-col items-center py-2">
+          <div class="relative flex items-center justify-center w-20 h-20">
+            <span class="absolute inset-0 rounded-full bg-cyan-400/25 radar-pulse"></span>
+            <div class="relative w-16 h-16 rounded-full bg-gradient-to-tr from-cyan-400/30 to-rose-400/30 border border-cyan-300/40 flex items-center justify-center text-3xl">
+              👩🏻‍💻
+            </div>
+          </div>
+          <h3 id="callPartnerName" class="text-base font-bold text-white mt-3">Naya</h3>
+          <p id="callTimerText" class="font-mono text-sm text-cyan-300 mt-1">00:00</p>
+        </div>
+
+        <!-- Call Controls -->
+        <div class="flex items-center justify-center gap-3 pt-1">
+          <button id="btnToggleMute" class="px-3.5 py-2.5 rounded-2xl glass-sub text-xs font-semibold text-slate-200 hover:border-cyan-400/40">
+            🎙️ Mic On
+          </button>
+          <button id="btnToggleCam" class="hidden px-3.5 py-2.5 rounded-2xl glass-sub text-xs font-semibold text-slate-200 hover:border-rose-400/40">
+            📷 Cam On
+          </button>
+          <button id="btnEndCall" class="px-5 py-2.5 rounded-2xl bg-rose-500 hover:bg-rose-600 text-white font-bold text-xs shadow-neon-rose transition active:scale-95">
+            ❌ Tutup
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Notification Banner (No alert() anywhere) -->
+    <div id="toastBanner" class="hidden fixed top-4 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-2xl bg-slate-900/95 border border-cyan-400/40 text-xs font-medium text-white shadow-xl max-w-[360px] text-center">
+      Pesan notifikasi
+    </div>
+  </div>
+
+  <script>
+    /**
+     * =========================================================================
+     * COUPLELINK & VAULT — SINGLE-FILE CLIENT APPLICATION
+     * Features:
+     * 1. Invite Link + WA Developer ACC (6283162041701)
+     * 2. Auto-deactivate after 7 days (with simulation toggle for testing)
+     * 3. Couple Live Location Radar & Coordinates (with Geolocation + fallback)
+     * 4. Chat, Voice Note (MediaRecorder + fallback), Voice Call & Video Call
+     * 5. Multiplayer Draw Canvas + "Seberapa Sayang?" Quiz + "Test Kejujuran" Quiz
+     * 6. User & Couple Database persisted in localStorage
+     * =========================================================================
+     */
+
+    const DEVELOPER_WA = '6283162041701';
+    const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+    const STORAGE_KEY = 'couplelink_vault_state_v1';
+
+    // Default seed data
+    function createInitialState() {
+      const now = Date.now();
+      return {
+        activeTab: 'invite',
+        userName: 'Raka',
+        partnerName: 'Naya',
+        inviteCode: 'CPL-8842-NY',
+        approvalStatus: 'Pending', // 'Pending' | 'Approved' | 'Expired'
+        activatedAt: now,
+        simulatedElapsedMs: 0,
+        location: {
+          shareEnabled: true,
+          myLat: -6.1783,
+          myLng: 106.6319,
+          myArea: 'Tangerang, Banten',
+          partnerLat: -6.1891,
+          partnerLng: 106.6384,
+          partnerBattery: 84,
+          lastUpdated: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
+        },
+        messages: [
+          { id: 1, sender: 'partner', type: 'text', text: 'Sayang, kamu udah sampai mana? Aku aktifin lokasi ya 🥰', time: '09:15' },
+          { id: 2, sender: 'me', type: 'text', text: 'Udah di jalan sayang, bentar lagi nyampe. Cek radar lokasi kita!', time: '09:16' }
+        ],
+        usersDb: [
+          {
+            id: 'USR-101',
+            userName: 'Raka',
+            partnerName: 'Naya',
+            inviteCode: 'CPL-8842-NY',
+            accStatus: 'Pending',
+            activatedAt: now,
+            activityCount: 14
+          },
+          {
+            id: 'USR-102',
+            userName: 'Dimas',
+            partnerName: 'Alya',
+            inviteCode: 'CPL-3091-AL',
+            accStatus: 'Approved',
+            activatedAt: now - (2 * 24 * 60 * 60 * 1000),
+            activityCount: 48
+          },
+          {
+            id: 'USR-103',
+            userName: 'Kevin',
+            partnerName: 'Tari',
+            inviteCode: 'CPL-7710-TR',
+            accStatus: 'Expired',
+            activatedAt: now - (8 * 24 * 60 * 60 * 1000),
+            activityCount: 29
+          }
+        ]
+      };
+    }
+
+    let state = loadState();
+    let toastTimeout = null;
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return createInitialState();
+        const parsed = JSON.parse(raw);
+        return { ...createInitialState(), ...parsed };
+      } catch (err) {
+        console.warn('Gagal memuat state dari localStorage:', err);
+        return createInitialState();
+      }
+    }
+
+    function saveState() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      } catch (err) {
+        console.warn('Gagal menyimpan state ke localStorage:', err);
+      }
+    }
+
+    function showToast(message) {
+      const el = document.getElementById('toastBanner');
+      el.textContent = message;
+      el.classList.remove('hidden');
+      clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => {
+        el.classList.add('hidden');
+      }, 2800);
+    }
+
+    // Check if 7 days have elapsed
+    function isExpiredBySevenDays() {
+      const elapsed = (Date.now() - state.activatedAt) + (state.simulatedElapsedMs || 0);
+      return elapsed >= SEVEN_DAYS_MS || state.approvalStatus === 'Expired';
+    }
+
+    function getRemainingTimeText() {
+      const elapsed = (Date.now() - state.activatedAt) + (state.simulatedElapsedMs || 0);
+      const remaining = Math.max(0, SEVEN_DAYS_MS - elapsed);
+      const days = Math.floor(remaining / (24 * 60 * 60 * 1000));
+      const hours = Math.floor((remaining % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000));
+      return `${days}h ${hours}j`;
+    }
+
+    // Guard interactive features when expired or not approved
+    function canUseCoupleFeatures() {
+      if (isExpiredBySevenDays()) {
+        showToast('🔒 Undangan nonaktif setelah 7 hari! Perbarui & minta ACC WA 6283162041701.');
+        switchTab('invite');
+        return false;
+      }
+      if (state.approvalStatus !== 'Approved') {
+        showToast('⏳ Menunggu ACC Developer WA 6283162041701 (atau klik Simulasi ACC).');
+        return false;
+      }
+      return true;
+    }
+
+    // Sync active couple record into usersDb
+    function syncActiveCoupleToDb() {
+      const expired = isExpiredBySevenDays();
+      const effectiveStatus = expired ? 'Expired' : state.approvalStatus;
+      const existingIdx = state.usersDb.findIndex(u => u.inviteCode === state.inviteCode);
+      const record = {
+        id: existingIdx >= 0 ? state.usersDb[existingIdx].id : `USR-${Math.floor(200 + Math.random() * 799)}`,
+        userName: state.userName || 'User',
+        partnerName: state.partnerName || 'Pasangan',
+        inviteCode: state.inviteCode,
+        accStatus: effectiveStatus,
+        activatedAt: state.activatedAt,
+        activityCount: existingIdx >= 0 ? state.usersDb[existingIdx].activityCount + 1 : 1
+      };
+      if (existingIdx >= 0) {
+        state.usersDb[existingIdx] = record;
+      } else {
+        state.usersDb.unshift(record);
+      }
+    }
+
+    // =========================================================================
+    // TAB NAVIGATION & UI RENDERING
+    // =========================================================================
+    function switchTab(tabName) {
+      state.activeTab = tabName;
+      saveState();
+
+      document.querySelectorAll('.tab-panel').forEach(panel => {
+        panel.classList.toggle('hidden', panel.id !== `tab-${tabName}`);
+      });
+
+      document.querySelectorAll('.nav-tab').forEach(btn => {
+        const isActive = btn.dataset.tab === tabName;
+        btn.className = isActive
+          ? 'nav-tab flex flex-col items-center justify-center py-1.5 rounded-xl text-[10px] font-semibold bg-cyan-500/15 text-cyan-300 border border-cyan-400/30 transition'
+          : 'nav-tab flex flex-col items-center justify-center py-1.5 rounded-xl text-[10px] font-medium text-slate-400 hover:text-white transition';
+      });
+
+      if (tabName === 'location') {
+        resizeAndDrawRadar();
+      } else if (tabName === 'games') {
+        resizeAndDrawDrawCanvas();
+      } else if (tabName === 'db') {
+        renderDatabaseTab();
+      }
+    }
+
+    function renderAllUI() {
+      const expired = isExpiredBySevenDays();
+      if (expired && state.approvalStatus !== 'Expired') {
+        state.approvalStatus = 'Expired';
+      }
+
+      // Header & Couple Names
+      document.getElementById('coupleHeaderSubtitle').innerHTML =
+        `Pasangan: <span class="text-rose-300 font-medium">${escapeHtml(state.userName)} & ${escapeHtml(state.partnerName)}</span>`;
+      document.getElementById('inputUserName').value = state.userName;
+      document.getElementById('inputPartnerName').value = state.partnerName;
+      document.getElementById('chatPartnerNameTitle').textContent = `${state.partnerName} (Pasangan)`;
+      document.getElementById('callPartnerName').textContent = state.partnerName;
+
+      // Invite Link & Code
+      const inviteUrl = `https://couplelink-vault.app/join?code=${encodeURIComponent(state.inviteCode)}`;
+      document.getElementById('displayInviteCode').textContent = state.inviteCode;
+      document.getElementById('displayInviteLink').textContent = inviteUrl;
+
+      // WhatsApp Developer Pre-filled Message
+      const waText = encodeURIComponent(
+        `Halo Developer CoupleLink & Vault (6283162041701), saya ingin mengajukan ACC / izin akses undangan pasangan:\n` +
+        `• Nama User: ${state.userName}\n` +
+        `• Nama Pasangan: ${state.partnerName}\n` +
+        `• Kode Undangan: ${state.inviteCode}\n` +
+        `• Link: ${inviteUrl}\n` +
+        `Mohon bantuannya untuk ACC ya min. Terima kasih!`
+      );
+      document.getElementById('waApprovalLink').href = `https://wa.me/${DEVELOPER_WA}?text=${waText}`;
+
+      // Status Badges & 7-Day Banner
+      const badgeEl = document.getElementById('headerStatusBadge');
+      const pillEl = document.getElementById('inviteApprovalPill');
+      const expiryDot = document.getElementById('expiryDot');
+      const expiryText = document.getElementById('expiryText');
+      const expiredCard = document.getElementById('expiredNoticeCard');
+
+      if (expired) {
+        badgeEl.textContent = 'Kadaluarsa (7h)';
+        badgeEl.className = 'px-2.5 py-1 rounded-full text-[11px] font-semibold bg-rose-500/20 text-rose-300 border border-rose-400/40';
+        pillEl.textContent = 'Nonaktif (7 Hari)';
+        pillEl.className = 'px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-rose-500/20 text-rose-300 border border-rose-400/40';
+        expiryDot.className = 'w-2 h-2 rounded-full bg-rose-500 inline-block shrink-0';
+        expiryText.innerHTML = `<span class="text-rose-300 font-semibold">Nonaktif setelah 7 hari digunakan</span>`;
+        expiredCard.classList.remove('hidden');
+      } else if (state.approvalStatus === 'Approved') {
+        badgeEl.textContent = 'Disetujui ACC';
+        badgeEl.className = 'px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-400/40';
+        pillEl.textContent = 'Disetujui Developer';
+        pillEl.className = 'px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-400/40';
+        expiryDot.className = 'w-2 h-2 rounded-full bg-emerald-400 inline-block shrink-0';
+        expiryText.innerHTML = `Masa aktif undangan: <strong class="text-cyan-300">${getRemainingTimeText()}</strong> tersisa`;
+        expiredCard.classList.add('hidden');
+      } else {
+        badgeEl.textContent = 'Menunggu ACC';
+        badgeEl.className = 'px-2.5 py-1 rounded-full text-[11px] font-semibold bg-amber-500/20 text-amber-300 border border-amber-400/40';
+        pillEl.textContent = 'Menunggu ACC Developer';
+        pillEl.className = 'px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-500/20 text-amber-300 border border-amber-400/40';
+        expiryDot.className = 'w-2 h-2 rounded-full bg-amber-400 inline-block shrink-0';
+        expiryText.innerHTML = `Masa aktif undangan: <strong class="text-cyan-300">${getRemainingTimeText()}</strong> tersisa`;
+        expiredCard.classList.add('hidden');
+      }
+
+      renderLocationUI();
+      renderChatMessages();
+      renderDatabaseTab();
+    }
+
+    function escapeHtml(str) {
+      return String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    // =========================================================================
+    // INVITE & 7-DAY AUTO DEACTIVATE HANDLERS
+    // =========================================================================
+    function generateInviteCode() {
+      const rand = Math.floor(1000 + Math.random() * 9000);
+      const pTag = (state.partnerName || 'PR').slice(0, 2).toUpperCase().replace(/[^A-Z]/g, 'X');
+      return `CPL-${rand}-${pTag}`;
+    }
+
+    document.getElementById('inputUserName').addEventListener('input', (e) => {
+      state.userName = e.target.value.trim() || 'Kamu';
+      syncActiveCoupleToDb();
+      saveState();
+      renderAllUI();
+    });
+
+    document.getElementById('inputPartnerName').addEventListener('input', (e) => {
+      state.partnerName = e.target.value.trim() || 'Pasangan';
+      syncActiveCoupleToDb();
+      saveState();
+      renderAllUI();
+    });
+
+    document.getElementById('btnGenerateNewCode').addEventListener('click', () => {
+      state.inviteCode = generateInviteCode();
+      state.activatedAt = Date.now();
+      state.simulatedElapsedMs = 0;
+      state.approvalStatus = 'Pending';
+      syncActiveCoupleToDb();
+      saveState();
+      renderAllUI();
+      showToast('✨ Kode undangan baru dibuat! Menunggu ACC WA Developer.');
+    });
+
+    document.getElementById('btnCopyInvite').addEventListener('click', () => {
+      const link = document.getElementById('displayInviteLink').textContent;
+      const tempInput = document.createElement('input');
+      tempInput.value = link;
+      document.body.appendChild(tempInput);
+      tempInput.select();
+      try {
+        document.execCommand('copy');
+        showToast('📋 Link undangan berhasil disalin!');
+      } catch (e) {
+        showToast('Salin link: ' + link);
+      }
+      document.body.removeChild(tempInput);
+    });
+
+    document.getElementById('btnDemoApprove').addEventListener('click', () => {
+      if (isExpiredBySevenDays()) {
+        showToast('⚠️ Undangan sudah melewati 7 hari. Klik "Buat Undangan Baru" dulu.');
+        return;
+      }
+      state.approvalStatus = 'Approved';
+      syncActiveCoupleToDb();
+      saveState();
+      renderAllUI();
+      showToast('✅ Undangan di-ACC Developer! Semua fitur pasangan aktif.');
+    });
+
+    document.getElementById('btnDemoPending').addEventListener('click', () => {
+      if (isExpiredBySevenDays()) return;
+      state.approvalStatus = 'Pending';
+      syncActiveCoupleToDb();
+      saveState();
+      renderAllUI();
+      showToast('⏳ Status diubah ke Menunggu ACC Developer.');
+    });
+
+    document.getElementById('btnSimulate7Days').addEventListener('click', () => {
+      state.simulatedElapsedMs = SEVEN_DAYS_MS + 1000;
+      state.approvalStatus = 'Expired';
+      syncActiveCoupleToDb();
+      saveState();
+      renderAllUI();
+      switchTab('invite');
+      showToast('🔒 Simulasi 7 hari terlewati: Undangan otomatis nonaktif!');
+    });
+
+    document.getElementById('btnRenewInvite').addEventListener('click', () => {
+      state.inviteCode = generateInviteCode();
+      state.activatedAt = Date.now();
+      state.simulatedElapsedMs = 0;
+      state.approvalStatus = 'Pending';
+      syncActiveCoupleToDb();
+      saveState();
+      renderAllUI();
+      showToast('🔄 Undangan baru aktif (7 hari) & siap dikirim ke WA 6283162041701!');
+    });
+
+    document.getElementById('btnOpenCoupleSetup').addEventListener('click', () => {
+      switchTab('invite');
+      showToast('⚙️ Atur nama pasangan & kode undangan di tab Undangan.');
+    });
+
+    // =========================================================================
+    // COUPLE LIVE LOCATION RADAR & GEOLOCATION
+    // =========================================================================
+    function haversineKm(lat1, lon1, lat2, lon2) {
+      const R = 6371;
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      return R * c;
+    }
+
+    function renderLocationUI() {
+      const loc = state.location;
+      const privBtn = document.getElementById('btnTogglePrivacy');
+      if (loc.shareEnabled) {
+        privBtn.textContent = '👁️ Bagikan Lokasi: ON';
+        privBtn.className = 'px-3 py-1.5 rounded-xl text-[11px] font-semibold border transition active:scale-95 bg-emerald-500/15 text-emerald-300 border-emerald-400/35';
+      } else {
+        privBtn.textContent = '🙈 Sembunyikan: OFF';
+        privBtn.className = 'px-3 py-1.5 rounded-xl text-[11px] font-semibold border transition active:scale-95 bg-slate-800 text-slate-300 border-slate-600';
+      }
+
+      document.getElementById('locationLastUpdated').textContent = `Terakhir diperbarui: ${loc.lastUpdated}`;
+      document.getElementById('myCoordsText').textContent = loc.shareEnabled
+        ? `${loc.myLat.toFixed(4)}, ${loc.myLng.toFixed(4)}`
+        : 'Disembunyikan (Privasi)';
+      document.getElementById('myAreaText').textContent = loc.myArea;
+
+      document.getElementById('partnerCoordsText').textContent = `${loc.partnerLat.toFixed(4)}, ${loc.partnerLng.toFixed(4)}`;
+      document.getElementById('partnerStatusText').textContent = `● ${state.partnerName} Aktif • Baterai ${loc.partnerBattery}%`;
+
+      const distKm = haversineKm(loc.myLat, loc.myLng, loc.partnerLat, loc.partnerLng);
+      document.getElementById('distancePill').textContent =
+        distKm < 1 ? `Jarak: ${Math.round(distKm * 1000)} m` : `Jarak: ${distKm.toFixed(2)} km`;
+
+      resizeAndDrawRadar();
+    }
+
+    function resizeAndDrawRadar() {
+      const canvas = document.getElementById('locationCanvas');
+      if (!canvas) return;
+      const rect = canvas.parentElement.getBoundingClientRect();
+      if (rect.width === 0 || rect.height === 0) return;
+
+      canvas.width = rect.width;
+      canvas.height = rect.height;
+
+      const ctx = canvas.getContext('2d');
+      const w = canvas.width;
+      const h = canvas.height;
+      const cx = w / 2;
+      const cy = h / 2;
+
+      ctx.clearRect(0, 0, w, h);
+
+      // Subtle radar rings
+      ctx.strokeStyle = 'rgba(34, 211, 238, 0.16)';
+      ctx.lineWidth = 1;
+      [35, 68, 102].forEach(r => {
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.stroke();
+      });
+
+      // Crosshairs
+      ctx.beginPath();
+      ctx.moveTo(0, cy);
+      ctx.lineTo(w, cy);
+      ctx.moveTo(cx, 0);
+      ctx.lineTo(cx, h);
+      ctx.stroke();
+
+      // Calculate relative offset from my coords to partner coords
+      const dLat = (state.location.partnerLat - state.location.myLat) * 4200;
+      const dLng = (state.location.partnerLng - state.location.myLng) * 4200;
+      const maxR = Math.min(w, h) * 0.38;
+      const rawDist = Math.hypot(dLng, dLat) || 1;
+      const clampedR = Math.min(rawDist, maxR);
+      const angle = Math.atan2(dLat, dLng);
+      const px = cx + Math.cos(angle) * clampedR;
+      const py = cy + Math.sin(angle) * clampedR;
+
+      // Dashed connection line between couple
+      ctx.save();
+      ctx.setLineDash([5, 5]);
+      ctx.strokeStyle = 'rgba(251, 113, 133, 0.65)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(px, py);
+      ctx.stroke();
+      ctx.restore();
+
+      // My Pin (Cyan)
+      ctx.fillStyle = '#22d3ee';
+      ctx.beginPath();
+      ctx.arc(cx, cy, 7, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.font = 'bold 11px Inter, sans-serif';
+      ctx.fillStyle = '#cffafe';
+      ctx.fillText(state.userName || 'Kamu', cx - 16, cy + 20);
+
+      // Partner Pin (Rose)
+      ctx.fillStyle = '#fb7185';
+      ctx.beginPath();
+      ctx.arc(px, py, 8, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#ffe4e6';
+      ctx.fillText(state.partnerName || 'Pasangan', px - 22, py - 12);
+    }
+
+    document.getElementById('btnTogglePrivacy').addEventListener('click', () => {
+      if (!canUseCoupleFeatures()) return;
+      state.location.shareEnabled = !state.location.shareEnabled;
+      syncActiveCoupleToDb();
+      saveState();
+      renderLocationUI();
+      showToast(state.location.shareEnabled ? '👁️ Lokasi kamu sekarang dibagikan.' : '🙈 Lokasi kamu disembunyikan.');
+    });
+
+    document.getElementById('btnUpdateLocation').addEventListener('click', () => {
+      if (!canUseCoupleFeatures()) return;
+      const finishUpdate = (lat, lng, areaLabel) => {
+        state.location.myLat = lat;
+        state.location.myLng = lng;
+        state.location.myArea = areaLabel;
+        state.location.lastUpdated = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        syncActiveCoupleToDb();
+        saveState();
+        renderLocationUI();
+        showToast('📡 Lokasi GPS berhasil diperbarui!');
+      };
+
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            finishUpdate(pos.coords.latitude, pos.coords.longitude, 'GPS Perangkat Aktif');
+          },
+          () => {
+            // Fallback smooth coordinates if permission denied in iframe
+            const jitterLat = state.location.myLat + (Math.random() - 0.5) * 0.004;
+            const jitterLng = state.location.myLng + (Math.random() - 0.5) * 0.004;
+            finishUpdate(jitterLat, jitterLng, 'Tangerang, Banten (GPS Simulasi)');
+          },
+          { timeout: 3500 }
+        );
+      } else {
+        finishUpdate(state.location.myLat + 0.001, state.location.myLng + 0.001, 'Tangerang, Banten');
+      }
+    });
+
+    document.getElementById('btnMovePartnerSim').addEventListener('click', () => {
+      if (!canUseCoupleFeatures()) return;
+      state.location.partnerLat += (Math.random() - 0.5) * 0.006;
+      state.location.partnerLng += (Math.random() - 0.5) * 0.006;
+      state.location.partnerBattery = Math.max(15, state.location.partnerBattery - 1);
+      state.location.lastUpdated = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+      syncActiveCoupleToDb();
+      saveState();
+      renderLocationUI();
+      showToast(`🚶 ${state.partnerName} berpindah posisi di radar!`);
+    });
+
+    // =========================================================================
+    // COUPLE CHAT, VOICE NOTE, VOICE CALL & VIDEO CALL
+    // =========================================================================
+    function getNowTimeShort() {
+      return new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+    }
+
+    function renderChatMessages() {
+      const container = document.getElementById('chatMessagesContainer');
+      if (!container) return;
+
+      container.innerHTML = state.messages.map(msg => {
+        const isMe = msg.sender === 'me';
+        const alignClass = isMe ? 'justify-end' : 'justify-start';
+        const bubbleClass = isMe
+          ? 'bg-gradient-to-r from-cyan-500/25 to-sky-500/20 border-cyan-400/35 text-cyan-50'
+          : 'bg-slate-900/90 border-rose-400/25 text-slate-100';
+
+        let bodyHtml = '';
+        if (msg.type === 'vn') {
+          bodyHtml = `
+            <div class="flex items-center gap-2">
+              <button onclick="playSimulatedVn('${msg.duration || '00:04'}')" class="px-2.5 py-1 rounded-lg bg-rose-500/25 text-rose-200 text-[11px] font-mono font-bold">
+                ▶ Putar VN (${msg.duration || '00:04'})
+              </button>
+              <span class="text-[10px] text-slate-400 font-mono">🎙️ Audio</span>
+            </div>
+          `;
+        } else {
+          bodyHtml = `<p class="text-xs leading-relaxed break-words">${escapeHtml(msg.text)}</p>`;
+        }
+
+        return `
+          <div class="flex ${alignClass}">
+            <div class="max-w-[82%] px-3 py-2 rounded-2xl border ${bubbleClass}">
+              ${bodyHtml}
+              <div class="text-[10px] text-slate-400 mt-1 text-right font-mono">${msg.time}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      container.scrollTop = container.scrollHeight;
+    }
+
+    window.playSimulatedVn = function(duration) {
+      showToast(`🔊 Memutar Voice Note (${duration})...`);
+    };
+
+    document.getElementById('chatInputForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (!canUseCoupleFeatures()) return;
+      const input = document.getElementById('chatTextInput');
+      const text = input.value.trim();
+      if (!text) return;
+
+      state.messages.push({
+        id: Date.now(),
+        sender: 'me',
+        type: 'text',
+        text,
+        time: getNowTimeShort()
+      });
+      input.value = '';
+      syncActiveCoupleToDb();
+      saveState();
+      renderChatMessages();
+
+      // Simulated partner auto-reply
+      setTimeout(() => {
+        const replies = [
+          `Iya sayang, aku udah baca pesan kamu (${state.userName}) 🥰`,
+          `Hati-hati di jalan ya! Kabarin kalau udah sampai ❤️`,
+          `Aku lagi nungguin kamu nih, jangan lama-lama ya 😘`
+        ];
+        state.messages.push({
+          id: Date.now() + 1,
+          sender: 'partner',
+          type: 'text',
+          text: replies[Math.floor(Math.random() * replies.length)],
+          time: getNowTimeShort()
+        });
+        saveState();
+        renderChatMessages();
+      }, 750);
+    });
+
+    // Voice Note Recording (MediaRecorder with graceful fallback)
+    let isRecordingVn = false;
+    let vnSeconds = 0;
+    let vnInterval = null;
+    let mediaRecorder = null;
+
+    document.getElementById('btnToggleVoiceNote').addEventListener('click', async () => {
+      if (!canUseCoupleFeatures()) return;
+      const btn = document.getElementById('btnToggleVoiceNote');
+      const dot = document.getElementById('vnIndicatorDot');
+      const timerEl = document.getElementById('vnTimerText');
+
+      if (!isRecordingVn) {
+        isRecordingVn = true;
+        vnSeconds = 0;
+        btn.textContent = '⏹️ Kirim VN';
+        btn.className = 'px-3 py-1.5 rounded-lg bg-emerald-500 text-slate-950 text-[11px] font-bold transition active:scale-95';
+        dot.className = 'w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping';
+
+        try {
+          if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            mediaRecorder = new MediaRecorder(stream);
+            mediaRecorder.start();
+          }
+        } catch (err) {
+          // Fallback simulated timer in restricted preview environments
+        }
+
+        vnInterval = setInterval(() => {
+          vnSeconds += 1;
+          const mm = String(Math.floor(vnSeconds / 60)).padStart(2, '0');
+          const ss = String(vnSeconds % 60).padStart(2, '0');
+          timerEl.textContent = `Merekam VN: ${mm}:${ss}`;
+        }, 1000);
+      } else {
+        isRecordingVn = false;
+        clearInterval(vnInterval);
+        try {
+          if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+            mediaRecorder.stop();
+            mediaRecorder.stream.getTracks().forEach(t => t.stop());
+          }
+        } catch (e) {}
+
+        const durText = `00:${String(Math.max(1, vnSeconds)).padStart(2, '0')}`;
+        btn.textContent = '🎙️ Rekam VN';
+        btn.className = 'px-3 py-1.5 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 border border-rose-400/40 text-rose-200 text-[11px] font-semibold transition active:scale-95';
+        dot.className = 'w-2.5 h-2.5 rounded-full bg-slate-500';
+        timerEl.textContent = 'Voice Note: 00:00';
+
+        state.messages.push({
+          id: Date.now(),
+          sender: 'me',
+          type: 'vn',
+          duration: durText,
+          time: getNowTimeShort()
+        });
+        syncActiveCoupleToDb();
+        saveState();
+        renderChatMessages();
+        showToast(`🎙️ Voice Note (${durText}) terkirim ke ${state.partnerName}!`);
+      }
+    });
+
+    // Voice Call & Video Call Modal
+    let callTimerInterval = null;
+    let callSeconds = 0;
+    let callMuted = false;
+    let callCamOff = false;
+
+    function openCallModal(mode) {
+      if (!canUseCoupleFeatures()) return;
+      callSeconds = 0;
+      callMuted = false;
+      callCamOff = false;
+
+      document.getElementById('callModal').classList.remove('hidden');
+      document.getElementById('callTypeLabel').textContent = mode === 'video' ? 'VIDEO CALL HD AKTIF' : 'VOICE CALL AKTIF';
+      document.getElementById('videoCallViewport').classList.toggle('hidden', mode !== 'video');
+      document.getElementById('btnToggleCam').classList.toggle('hidden', mode !== 'video');
+      document.getElementById('btnToggleMute').textContent = '🎙️ Mic On';
+      document.getElementById('btnToggleCam').textContent = '📷 Cam On';
+
+      clearInterval(callTimerInterval);
+      callTimerInterval = setInterval(() => {
+        callSeconds += 1;
+        const mm = String(Math.floor(callSeconds / 60)).padStart(2, '0');
+        const ss = String(callSeconds % 60).padStart(2, '0');
+        document.getElementById('callTimerText').textContent = `${mm}:${ss}`;
+      }, 1000);
+    }
+
+    document.getElementById('btnStartVoiceCall').addEventListener('click', () => openCallModal('voice'));
+    document.getElementById('btnStartVideoCall').addEventListener('click', () => openCallModal('video'));
+
+    document.getElementById('btnToggleMute').addEventListener('click', () => {
+      callMuted = !callMuted;
+      document.getElementById('btnToggleMute').textContent = callMuted ? '🔇 Mic Off' : '🎙️ Mic On';
+    });
+
+    document.getElementById('btnToggleCam').addEventListener('click', () => {
+      callCamOff = !callCamOff;
+      document.getElementById('btnToggleCam').textContent = callCamOff ? '🚫 Cam Off' : '📷 Cam On';
+      document.getElementById('videoStreamStatus').textContent = callCamOff
+        ? 'Kamera Kamu Dimatikan'
+        : 'Kamera HD Pasangan Tersambung';
+    });
+
+    document.getElementById('btnEndCall').addEventListener('click', () => {
+      clearInterval(callTimerInterval);
+      document.getElementById('callModal').classList.add('hidden');
+      const mm = String(Math.floor(callSeconds / 60)).padStart(2, '0');
+      const ss = String(callSeconds % 60).padStart(2, '0');
+      state.messages.push({
+        id: Date.now(),
+        sender: 'me',
+        type: 'text',
+        text: `📞 Panggilan bersama ${state.partnerName} berakhir (Durasi ${mm}:${ss}).`,
+        time: getNowTimeShort()
+      });
+      saveState();
+      renderChatMessages();
+      showToast(`Panggilan selesai (${mm}:${ss}).`);
+    });
+
+    // =========================================================================
+    // COUPLE MINI-GAMES: DRAW MULTIPLAYER + LOVE QUIZ + HONESTY QUIZ
+    // =========================================================================
+    document.querySelectorAll('.game-subtab').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const target = btn.dataset.game;
+        document.querySelectorAll('.game-subtab').forEach(b => {
+          const active = b.dataset.game === target;
+          b.className = active
+            ? 'game-subtab py-2 px-2 rounded-xl text-[11px] font-bold bg-cyan-500/20 text-cyan-200 border border-cyan-400/30 transition'
+            : 'game-subtab py-2 px-2 rounded-xl text-[11px] font-semibold text-slate-400 hover:text-white transition';
+        });
+        document.querySelectorAll('.game-panel').forEach(p => {
+          p.classList.toggle('hidden', p.id !== `game-panel-${target}`);
+        });
+        if (target === 'draw') {
+          resizeAndDrawDrawCanvas();
+        } else if (target === 'love') {
+          renderLoveQuiz();
+        } else if (target === 'honesty') {
+          renderHonestyQuiz();
+        }
+      });
+    });
+
+    // Draw Multiplayer Canvas Logic
+    const drawCanvas = document.getElementById('drawCanvas');
+    const drawCtx = drawCanvas.getContext('2d');
+    let isDrawing = false;
+    let drawColor = '#22d3ee';
+    let isEraser = false;
+
+    function resizeAndDrawDrawCanvas() {
+      const rect = drawCanvas.getBoundingClientRect();
+      if (rect.width === 0 || rect.height === 0) return;
+      const prevImage = drawCanvas.width > 0 && drawCanvas.height > 0
+        ? drawCtx.getImageData(0, 0, drawCanvas.width, drawCanvas.height)
+        : null;
+      drawCanvas.width = rect.width;
+      drawCanvas.height = rect.height;
+      drawCtx.lineCap = 'round';
+      drawCtx.lineJoin = 'round';
+      if (prevImage) {
+        drawCtx.putImageData(prevImage, 0, 0);
+      }
+    }
+
+    function getCanvasPos(canvas, evt) {
+      const rect = canvas.getBoundingClientRect();
+      const clientX = evt.touches ? evt.touches[0].clientX : evt.clientX;
+      const clientY = evt.touches ? evt.touches[0].clientY : evt.clientY;
+      return {
+        x: clientX - rect.left,
+        y: clientY - rect.top
+      };
+    }
+
+    function startDraw(evt) {
+      if (!canUseCoupleFeatures()) return;
+      evt.preventDefault();
+      isDrawing = true;
+      const pos = getCanvasPos(drawCanvas, evt);
+      drawCtx.beginPath();
+      drawCtx.moveTo(pos.x, pos.y);
+    }
+
+    function moveDraw(evt) {
+      if (!isDrawing) return;
+      evt.preventDefault();
+      const pos = getCanvasPos(drawCanvas, evt);
+      const size = Number(document.getElementById('drawBrushSize').value || 6);
+      drawCtx.strokeStyle = isEraser ? '#020617' : drawColor;
+      drawCtx.lineWidth = isEraser ? size * 2.2 : size;
+      drawCtx.lineTo(pos.x, pos.y);
+      drawCtx.stroke();
+    }
+
+    function endDraw() {
+      if (!isDrawing) return;
+      isDrawing = false;
+      drawCtx.closePath();
+    }
+
+    drawCanvas.addEventListener('mousedown', startDraw);
+    drawCanvas.addEventListener('mousemove', moveDraw);
+    window.addEventListener('mouseup', endDraw);
+    drawCanvas.addEventListener('touchstart', startDraw, { passive: false });
+    drawCanvas.addEventListener('touchmove', moveDraw, { passive: false });
+    window.addEventListener('touchend', endDraw);
+
+    document.querySelectorAll('.draw-color').forEach(btn => {
+      btn.addEventListener('click', () => {
+        isEraser = false;
+        drawColor = btn.dataset.color;
+        document.querySelectorAll('.draw-color').forEach(b => b.classList.remove('ring-2', 'ring-white'));
+        btn.classList.add('ring-2', 'ring-white');
+      });
+    });
+
+    document.getElementById('btnEraserToggle').addEventListener('click', () => {
+      isEraser = !isEraser;
+      showToast(isEraser ? '🧽 Mode penghapus aktif.' : '✏️ Mode kuas warna aktif.');
+    });
+
+    document.getElementById('btnClearDrawCanvas').addEventListener('click', () => {
+      drawCtx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
+      showToast('🗑️ Kanvas gambar dibersihkan.');
+    });
+
+    // Simulate partner drawing a heart/wave stroke on the shared canvas
+    document.getElementById('btnPartnerDrawStroke').addEventListener('click', () => {
+      if (!canUseCoupleFeatures()) return;
+      resizeAndDrawDrawCanvas();
+      const cx = drawCanvas.width * 0.65;
+      const cy = drawCanvas.height * 0.5;
+      drawCtx.save();
+      drawCtx.strokeStyle = '#fb7185';
+      drawCtx.lineWidth = 4;
+      drawCtx.beginPath();
+      for (let t = 0; t <= Math.PI * 2; t += 0.08) {
+        const hx = cx + 16 * Math.pow(Math.sin(t), 3) * 2.2;
+        const hy = cy - (13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t)) * 2.2;
+        if (t === 0) drawCtx.moveTo(hx, hy);
+        else drawCtx.lineTo(hx, hy);
+      }
+      drawCtx.stroke();
+      drawCtx.restore();
+      showToast(`🎨 ${state.partnerName} menggambar hati untukmu!`);
+    });
+
+    // Quiz 1: Seberapa Sayang Pasangan Kita?
+    const loveQuestions = [
+      {
+        q: 'Saat pasangan lagi capek seharian, hal pertama yang paling ingin kamu lakukan?',
+        options: [
+          { label: 'Dengerin cerita & temenin istirahat tanpa distraksi', pts: 25 },
+          { label: 'Beliin makanan favoritnya / kasih kejutan kecil', pts: 25 },
+          { label: 'Kasih waktu sendiri dulu baru chat', pts: 15 }
+        ]
+      },
+      {
+        q: 'Seberapa sering kamu menyempatkan waktu berkualitas (quality time) berdua?',
+        options: [
+          { label: 'Setiap hari meski sebentar (chat/call/ketemu)', pts: 25 },
+          { label: 'Beberapa kali seminggu sesuai jadwal', pts: 20 },
+          { label: 'Jarang banget karena sibuk', pts: 10 }
+        ]
+      },
+      {
+        q: 'Apa yang paling kamu ingat tentang pasanganmu?',
+        options: [
+          { label: 'Detail kecil, tanggal penting, & kebiasaannya', pts: 25 },
+          { label: 'Senyum dan candaannya aja', pts: 18 },
+          { label: 'Kadang lupa detail kecil', pts: 10 }
+        ]
+      },
+      {
+        q: 'Bagaimana komitmen jangka panjang kamu bersama pasangan?',
+        options: [
+          { label: 'Sangat serius, saling support tumbuh bersama', pts: 25 },
+          { label: 'Jalanin dulu sambil lihat ke depannya', pts: 15 },
+          { label: 'Masih ragu-ragu', pts: 5 }
+        ]
+      }
+    ];
+    let loveIdx = 0;
+    let loveScore = 0;
+
+    function renderLoveQuiz() {
+      const body = document.getElementById('loveQuizBody');
+      const prog = document.getElementById('loveQuizProgress');
+      if (loveIdx >= loveQuestions.length) {
+        prog.textContent = 'Selesai';
+        const verdict = loveScore >= 85
+          ? '💖 Bucin Maksimal! Rasa sayang kamu ke pasangan luar biasa tulus.'
+          : loveScore >= 60
+          ? '💘 Sayang Banget! Hubungan kalian hangat dan penuh perhatian.'
+          : '🌱 Masih Bisa Ditingkatkan! Yuk lebih sering perhatiin detail kecil pasangan.';
+        body.innerHTML = `
+          <div class="p-4 rounded-2xl bg-rose-950/40 border border-rose-400/35 text-center space-y-2">
+            <div class="text-2xl font-extrabold text-rose-300">${loveScore} / 100 Poin</div>
+            <p class="text-xs text-slate-200 leading-relaxed">${verdict}</p>
+            <button onclick="restartLoveQuiz()" class="mt-2 px-4 py-2 rounded-xl bg-rose-500 text-slate-950 font-bold text-xs">
+              Main Lagi
+            </button>
+          </div>
+        `;
+        return;
+      }
+
+      const item = loveQuestions[loveIdx];
+      prog.textContent = `${loveIdx + 1}/${loveQuestions.length}`;
+      body.innerHTML = `
+        <p class="text-xs font-semibold text-white leading-relaxed">${item.q}</p>
+        <div class="space-y-2">
+          ${item.options.map((opt, i) => `
+            <button onclick="answerLoveQuiz(${i})" class="w-full text-left px-3 py-2.5 rounded-xl glass-sub hover:border-rose-400/50 text-xs text-slate-200 transition">
+              ${opt.label}
+            </button>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    window.answerLoveQuiz = function(optIdx) {
+      if (!canUseCoupleFeatures()) return;
+      loveScore += loveQuestions[loveIdx].options[optIdx].pts;
+      loveIdx += 1;
+      syncActiveCoupleToDb();
+      saveState();
+      renderLoveQuiz();
+    };
+
+    window.restartLoveQuiz = function() {
+      loveIdx = 0;
+      loveScore = 0;
+      renderLoveQuiz();
+    };
+
+    // Quiz 2: Test Kejujuran Pasangan
+    const honestyQuestions = [
+      {
+        q: 'Jika pasangan bertanya jujur soal HP atau chat kamu, reaksi paling jujur kamu?',
+        options: [
+          { label: 'Terbuka & jelasin dengan tenang tanpa ada yang ditutup-tutupi', pts: 25 },
+          { label: 'Agak canggung tapi tetap jujur', pts: 18 },
+          { label: 'Defensif / mengalihkan topik', pts: 5 }
+        ]
+      },
+      {
+        q: 'Pernahkah kamu berbohong demi menghindari pertengkaran kecil?',
+        options: [
+          { label: 'Jarang sekali, lebih pilih ngomong baik-baik', pts: 25 },
+          { label: 'Kadang-kadang untuk hal sepele', pts: 15 },
+          { label: 'Sering biar aman', pts: 5 }
+        ]
+      },
+      {
+        q: 'Saat kamu bikin kesalahan ke pasangan, apa yang kamu lakukan?',
+        options: [
+          { label: 'Ngaku jujur, minta maaf tulus, & perbaiki sikap', pts: 25 },
+          { label: 'Minta maaf tapi cari alasan pembenaran', pts: 12 },
+          { label: 'Nunggu pasangan lupa sendiri', pts: 5 }
+        ]
+      },
+      {
+        q: 'Seberapa transparan kamu soal perasaan & unek-unek ke pasangan?',
+        options: [
+          { label: 'Sangat transparan, selalu dikomunikasikan', pts: 25 },
+          { label: 'Dipendam dulu baru cerita', pts: 15 },
+          { label: 'Sering dipendam sendiri', pts: 8 }
+        ]
+      }
+    ];
+    let honestyIdx = 0;
+    let honestyScore = 0;
+
+    function renderHonestyQuiz() {
+      const body = document.getElementById('honestyQuizBody');
+      const prog = document.getElementById('honestyQuizProgress');
+      if (honestyIdx >= honestyQuestions.length) {
+        prog.textContent = 'Selesai';
+        const verdict = honestyScore >= 85
+          ? '🛡️ Super Jujur & Transparan! Pondasi kepercayaan kalian sangat kuat.'
+          : honestyScore >= 60
+          ? '✨ Cukup Jujur! Terus bangun komunikasi terbuka biar makin solid.'
+          : '⚠️ Perlu Lebih Terbuka! Kejujuran kecil bikin hubungan makin sehat.';
+        body.innerHTML = `
+          <div class="p-4 rounded-2xl bg-cyan-950/40 border border-cyan-400/35 text-center space-y-2">
+            <div class="text-2xl font-extrabold text-cyan-300">Skor Kejujuran: ${honestyScore}%</div>
+            <p class="text-xs text-slate-200 leading-relaxed">${verdict}</p>
+            <button onclick="restartHonestyQuiz()" class="mt-2 px-4 py-2 rounded-xl bg-cyan-400 text-slate-950 font-bold text-xs">
+              Ulangi Test
+            </button>
+          </div>
+        `;
+        return;
+      }
+
+      const item = honestyQuestions[honestyIdx];
+      prog.textContent = `${honestyIdx + 1}/${honestyQuestions.length}`;
+      body.innerHTML = `
+        <p class="text-xs font-semibold text-white leading-relaxed">${item.q}</p>
+        <div class="space-y-2">
+          ${item.options.map((opt, i) => `
+            <button onclick="answerHonestyQuiz(${i})" class="w-full text-left px-3 py-2.5 rounded-xl glass-sub hover:border-cyan-400/50 text-xs text-slate-200 transition">
+              ${opt.label}
+            </button>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    window.answerHonestyQuiz = function(optIdx) {
+      if (!canUseCoupleFeatures()) return;
+      honestyScore += honestyQuestions[honestyIdx].options[optIdx].pts;
+      honestyIdx += 1;
+      syncActiveCoupleToDb();
+      saveState();
+      renderHonestyQuiz();
+    };
+
+    window.restartHonestyQuiz = function() {
+      honestyIdx = 0;
+      honestyScore = 0;
+      renderHonestyQuiz();
+    };
+
+    // =========================================================================
+    // USER & COUPLE DATABASE PANEL
+    // =========================================================================
+    function renderDatabaseTab() {
+      const container = document.getElementById('dbRecordsContainer');
+      const countEl = document.getElementById('dbTotalCount');
+      if (!container || !countEl) return;
+
+      countEl.textContent = `${state.usersDb.length} Akun`;
+
+      if (state.usersDb.length === 0) {
+        container.innerHTML = `<div class="p-4 rounded-xl bg-slate-950/70 text-center text-xs text-slate-400">Belum ada data pengguna di database.</div>`;
+        return;
+      }
+
+      container.innerHTML = state.usersDb.map(rec => {
+        const statusStyle = rec.accStatus === 'Approved'
+          ? 'bg-emerald-500/15 text-emerald-300 border-emerald-400/35'
+          : rec.accStatus === 'Expired'
+          ? 'bg-rose-500/15 text-rose-300 border-rose-400/35'
+          : 'bg-amber-500/15 text-amber-300 border-amber-400/35';
+
+        const statusLabel = rec.accStatus === 'Approved'
+          ? 'Disetujui ACC'
+          : rec.accStatus === 'Expired'
+          ? 'Nonaktif (7 Hari)'
+          : 'Menunggu ACC';
+
+        const ageDays = Math.floor((Date.now() - rec.activatedAt) / (24 * 60 * 60 * 1000));
+
+        return `
+          <div class="p-3 rounded-xl glass-sub space-y-1.5">
+            <div class="flex items-center justify-between gap-2">
+              <div class="text-xs font-bold text-white truncate">
+                ${escapeHtml(rec.userName)} ❤️ ${escapeHtml(rec.partnerName)}
+              </div>
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold border ${statusStyle} shrink-0">
+                ${statusLabel}
+              </span>
+            </div>
+            <div class="flex items-center justify-between text-[11px] text-slate-400 font-mono">
+              <span>Kode: <strong class="text-cyan-300">${escapeHtml(rec.inviteCode)}</strong></span>
+              <span>Aktif: ${ageDays}h/7h • ${rec.activityCount}x</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    document.getElementById('addDbUserForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const uName = document.getElementById('dbUserName').value.trim();
+      const pName = document.getElementById('dbPartnerName').value.trim();
+      const acc = document.getElementById('dbAccStatus').value;
+      if (!uName || !pName) return;
+
+      const code = `CPL-${Math.floor(1000 + Math.random() * 9000)}-${pName.slice(0, 2).toUpperCase()}`;
+      state.usersDb.unshift({
+        id: `USR-${Date.now().toString().slice(-4)}`,
+        userName: uName,
+        partnerName: pName,
+        inviteCode: code,
+        accStatus: acc,
+        activatedAt: acc === 'Expired' ? Date.now() - (8 * 24 * 60 * 60 * 1000) : Date.now(),
+        activityCount: 1
+      });
+
+      document.getElementById('dbUserName').value = '';
+      document.getElementById('dbPartnerName').value = '';
+      saveState();
+      renderDatabaseTab();
+      showToast(`🗄️ Data pasangan ${uName} & ${pName} ditambahkan!`);
+    });
+
+    document.getElementById('btnExportDbJson').addEventListener('click', () => {
+      const jsonStr = JSON.stringify(state.usersDb, null, 2);
+      const blob = new Blob([jsonStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'couplelink-vault-users-db.json';
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('📥 Database JSON berhasil diunduh!');
+    });
+
+    document.getElementById('btnResetDbDefault').addEventListener('click', () => {
+      const fresh = createInitialState();
+      state.usersDb = fresh.usersDb;
+      saveState();
+      renderDatabaseTab();
+      showToast('🔄 Database direset ke data awal.');
+    });
+
+    // =========================================================================
+    // INITIALIZATION & EVENT LISTENERS
+    // =========================================================================
+    document.querySelectorAll('.nav-tab').forEach(btn => {
+      btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+    });
+
+    window.addEventListener('resize', () => {
+      if (state.activeTab === 'location') resizeAndDrawRadar();
+      if (state.activeTab === 'games') resizeAndDrawDrawCanvas();
+    });
+
+    // Initial render
+    renderAllUI();
+    renderLoveQuiz();
+    renderHonestyQuiz();
+    switchTab(state.activeTab || 'invite');
+  </script>
+</body>
+</html>
